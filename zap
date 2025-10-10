@@ -11,7 +11,7 @@ pipeline {
                     sh '''
                     docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                        -t http://localhost \
+                        -t http://127.0.0.1 \
                         -r zap_report.html -J zap_report.json
                     '''
 
