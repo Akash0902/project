@@ -203,6 +203,7 @@ pipeline {
             }
         }
 
+
         stage("DAST Scan with OWASP ZAP") {
             steps {
                 script {
@@ -234,18 +235,8 @@ pipeline {
             }
         }
 
-        post {
-            always {
-                echo '📦 Archiving ZAP scan reports...'
-                archiveArtifacts artifacts: 'zap_report.html,zap_report.json'
-            }
-            failure {
-                echo '❌ ZAP scan found high severity issues'
-            }
-        }
-    }
 
-}
+    }
     
     post {
         always {
@@ -284,3 +275,5 @@ pipeline {
             }
         }
     }
+
+}
