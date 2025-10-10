@@ -203,22 +203,37 @@ pipeline {
             }
         }
 
+        stage("DAST Scan with OWASP ZAP") {
+            steps {
+                script {
+                    echo '🔍 Running OWASP ZAP baseline scan...'
 
-    stage("DAST Scan with OWASP ZAP") {
-        steps {
-            script {
-                echo '🔍 Running OWASP ZAP baseline scan...'
-                sh '''
-                # Run the app first (already in your Deploy stage)
-                # Run ZAP with host network
-                docker run --rm --network host -v $(pwd):/zap/wrk:rw \
-                    -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                    -t http://localhost \
-                    --exit-code 1 \
-                    -r zap_report.html -J zap_report.json
-                '''
+                    // Run the ZAP scan
+                    sh '''
+                    docker run --rm --network host -v $(pwd):/zap/wrk:rw \
+                        -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                        -t http://localhost \
+                        -r zap_report.html -J zap_report.json
+                    '''
+
+                    // Parse the JSON report and fail the build if high severity alerts exist
+                    def zapJson = readJSON file: 'zap_report.json'
+                    def highCount = zapJson.site.collect { it.alerts.findAll { it.risk == 'High' }.size() }.sum()
+                    echo "High severity issues found: ${highCount}"
+
+                    if(highCount > 0) {
+                        error "ZAP detected High severity issues! Failing the build."
+                    }
+                }
+            }
+            post {
+                always {
+                    echo '📦 Archiving ZAP scan reports...'
+                    archiveArtifacts artifacts: 'zap_report.html,zap_report.json'
+                }
             }
         }
+
         post {
             always {
                 echo '📦 Archiving ZAP scan reports...'
@@ -230,7 +245,7 @@ pipeline {
         }
     }
 
-    }
+    
     
     post {
         always {
@@ -269,5 +284,4 @@ pipeline {
             }
         }
     }
-
 }
