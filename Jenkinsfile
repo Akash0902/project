@@ -10,14 +10,15 @@ pipeline {
         jdk 'JDK17'
     }
     environment {
-        NEXUS_VERSION = "nexus3"
+        SCANNER_HOME = tool 'sonar-scanner'
+        NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "192.168.64.6:8081"
         NEXUS_REPOSITORY = "vprofile-repo"
         NEXUS_REPO_ID = "vprofile-repo"
         NEXUS_CREDENTIAL_ID = "nexuslogin"
         ARTVERSION = "${env.BUILD_ID}"
-        SCANNER_HOME = tool 'sonar-scanner'
+        
     }
     
     stages {
@@ -70,7 +71,7 @@ pipeline {
 
         stage('CODE ANALYSIS with SONARQUBE') {
             steps {
-                withSonarQubeEnv('sonar-pro') {
+                withSonarQubeEnv('sonar-server') {
                     sh '''${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
                         -Dsonar.projectName=vprofile-repo \
                         -Dsonar.projectVersion=1.0 \
