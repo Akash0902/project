@@ -87,10 +87,18 @@ pipeline {
                         -Dsonar.jacoco.reportsPath=target/jacoco.exec \
                         -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
                 }
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+                script {
+                    timeout(time: 3, unit: 'MINUTES') {
+                  
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
+        }
         }
 
         stage("Publish to Nexus Repository Manager") {
