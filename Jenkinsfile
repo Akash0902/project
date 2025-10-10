@@ -214,28 +214,21 @@ pipeline {
                 )
 
                 // 📧 Email Notification
-                emailext(
-                    subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-                        <p><b>Jenkins Maven CI/CD DevSecops Pipeline Status</b></p>
-                        <p>Project: ${env.JOB_NAME}</p>
-                        <p>Build Number: ${env.BUILD_NUMBER}</p>
-                        <p>Status: <b>${buildStatus}</b></p>
-                        <p>Started by: ${buildUser}</p>
-                        <p>Build URL: <a href='${buildUrl}'>${buildUrl}</a></p>
-                        <p><b>Attached Reports:</b></p>
-                        <ul>
-                            <li>Trivy FS Scan Report (trivyfs.txt)</li>
-                            <li>Trivy Image JSON (trivy-image.json)</li>
-                            <li>Trivy Image Summary (trivy-image.txt)</li>
-                            <li>Dependency Check Report (dependency-check-report.xml)</li>
-                        </ul>
-                    """,
-                    to: 'harishn662@gmail.com',
-                    from: 'harishn662@gmail.com',
-                    mimeType: 'text/html',
-                    attachmentsPattern: 'trivyfs.txt,trivy-image.json,trivy-image.txt,checkstyle-result.xml,dependency-check-report.xml'
-                )
+            emailext (
+                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                    <p>This is a Jenkins Amazon CICD pipeline status.</p>
+                    <p>Project: ${env.JOB_NAME}</p>
+                    <p>Build Number: ${env.BUILD_NUMBER}</p>
+                    <p>Build Status: ${buildStatus}</p>
+                    <p>Started by: ${buildUser}</p>
+                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                """,
+                to: 'harishn662@gmail.com',
+                from: 'harishn662@gmail.com',
+                mimeType: 'text/html',
+                attachmentsPattern: 'trivyfs.txt,trivy-image.json,trivy-image.txt,dependency-check-report.xml'
+                    )
             }
         }
     }
