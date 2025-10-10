@@ -4,24 +4,26 @@ def COLOR_MAP = [
 ]
 
 pipeline {
-    agent any
-    tools {
-        maven 'MAVEN3'
-        jdk 'JDK17'
-    }
+    
+	agent any
+tools {
+	    maven 'MAVEN3'
+	    jdk 'JDK17'
+	}
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "192.168.64.6:8081"
         NEXUS_REPOSITORY = "vprofile-repo"
-        NEXUS_REPO_ID = "vprofile-repo"
+	    NEXUS_REPO_ID    = "vprofile-repo"
         NEXUS_CREDENTIAL_ID = "nexuslogin"
         ARTVERSION = "${env.BUILD_ID}"
         SCANNER_HOME = tool 'sonar-scanner'
     }
-    
-    stages {
-        stage("Clean Workspace") {
+	
+    stages{
+
+       stage("Clean Workspace") {
             steps {
                 cleanWs()
             }
@@ -33,7 +35,7 @@ pipeline {
             }
         }
 
-        stage('BUILD') {
+        stage('BUILD'){
             steps {
                 sh 'mvn clean install -DskipTests'
             }
@@ -45,19 +47,19 @@ pipeline {
             }
         }
 
-        stage('UNIT TEST') {
+	stage('UNIT TEST'){
             steps {
                 sh 'mvn test'
             }
         }
 
-        stage('INTEGRATION TEST') {
+	stage('INTEGRATION TEST'){
             steps {
                 sh 'mvn verify -DskipUnitTests'
             }
         }
-        
-        stage('CODE ANALYSIS WITH CHECKSTYLE') {
+		
+        stage ('CODE ANALYSIS WITH CHECKSTYLE'){
             steps {
                 sh 'mvn checkstyle:checkstyle'
             }
@@ -69,33 +71,35 @@ pipeline {
         }
 
         stage('CODE ANALYSIS with SONARQUBE') {
-            steps {
-                withSonarQubeEnv('sonar-pro') {
-                    sh '''${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                        -Dsonar.projectName=vprofile-repo \
-                        -Dsonar.projectVersion=1.0 \
-                        -Dsonar.sources=src/ \
-                        -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                        -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-                }
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
+          
+          steps {
+            withSonarQubeEnv('sonar-pro') {
+               sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile-repo \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
             }
+
+            timeout(time: 10, unit: 'MINUTES') {
+               waitForQualityGate abortPipeline: true
+            }
+          }
         }
 
         stage("Publish to Nexus Repository Manager") {
             steps {
                 script {
-                    pom = readMavenPom file: "pom.xml"
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+                    pom = readMavenPom file: "pom.xml";
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
                     echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path
-                    artifactExists = fileExists artifactPath
+                    artifactPath = filesByGlob[0].path;
+                    artifactExists = fileExists artifactPath;
                     if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version} ARTVERSION"
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version} ARTVERSION";
                         nexusArtifactUploader(
                             nexusVersion: NEXUS_VERSION,
                             protocol: NEXUS_PROTOCOL,
@@ -114,25 +118,29 @@ pipeline {
                                 file: "pom.xml",
                                 type: "pom"]
                             ]
-                        )
-                    } else {
-                        error "*** File: ${artifactPath}, could not be found"
+                        );
+                    } 
+		    else {
+                        error "*** File: ${artifactPath}, could not be found";
                     }
                 }
             }
-        }
 
-        stage("OWASP FS Scan") {
+
+         stage("OWASP FS Scan") {
             steps {
                 dependencyCheck additionalArguments: '''
-                    --scan . 
+                    --scan ./ 
                     --disableYarnAudit 
                     --disableNodeAudit 
-                ''',
+                
+                   ''',
                 odcInstallation: 'dp-check'
+
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
+
 
         stage("Trivy File Scan") {
             steps {
@@ -144,7 +152,10 @@ pipeline {
             steps {
                 script {
                     env.IMAGE_TAG = "harishnshetty/vprofile:${BUILD_NUMBER}"
+
+                    // Optional cleanup
                     sh "docker rmi -f vprofile ${env.IMAGE_TAG} || true"
+
                     sh "docker build -t vprofile ."
                 }
             }
@@ -157,6 +168,8 @@ pipeline {
                         sh "docker login -u harishnshetty -p ${dockerpwd}"
                         sh "docker tag vprofile ${env.IMAGE_TAG}"
                         sh "docker push ${env.IMAGE_TAG}"
+
+                        // Also push latest
                         sh "docker tag vprofile harishnshetty/vprofile:latest"
                         sh "docker push harishnshetty/vprofile:latest"
                     }
@@ -164,17 +177,27 @@ pipeline {
             }
         }
 
+       
+
         stage("Trivy Scan Image") {
             steps {
                 script {
                     sh """
                     echo '🔍 Running Trivy scan on ${env.IMAGE_TAG}'
+
+                    # JSON report
                     trivy image -f json -o trivy-image.json ${env.IMAGE_TAG}
+
+                    # HTML report using built-in HTML format
                     trivy image -f table -o trivy-image.txt ${env.IMAGE_TAG}
-                    """
+
+                    # Fail build if HIGH/CRITICAL vulnerabilities found
+                    # trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
+                """
                 }
             }
         }
+
 
         stage("Deploy to Container") {
             steps {
@@ -184,25 +207,28 @@ pipeline {
                 }
             }
         }
-
-        stage('Upload APP image') {
-            steps {
+    }           
+         stage ('UPload APP image') {
+            steps{
                 script {
-                    docker.withRegistry('', 'registryCredential') {
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("$BUILD_NUMBER")
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("latest")
+                    docker.withRegistry( VprofileRegistry, registryCredential ){
+                        dockerImage.push("$BUILD_NUMBER")
+                        dockerImage.push("latest")
                     }
                 }
             }
+         }
         }
-    }
-    
-    post {
+     post {
         always {
             echo 'Slack Notification'
-            slackSend channel: '#devopscicd',
+            slackSend channel: '#devopscicd'
             color: COLOR_MAP[currentBuild.currentResult],
-            message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More Info At: ${env.BUILD_URL}"
+            message: "*${currentBuild.currentResult}:* Job ${env.JOB_Name} build ${env.BUILD_NUMBER} \n More Info At: ${env.BUILD_USER} "
         }
+     }
+
     }
+
+
 }
