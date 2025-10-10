@@ -10,7 +10,9 @@ pipeline {
         jdk 'JDK17'
     }
     environment {
+
         SCANNER_HOME = tool 'sonar-scanner'
+
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "192.168.64.6:8081"
@@ -19,9 +21,10 @@ pipeline {
         NEXUS_CREDENTIAL_ID = "nexuslogin"
         ARTVERSION = "${env.BUILD_ID}"
 
-        DOCKER_NAME  = 'harishnshetty/vprofile'
-        IMAGE_NAME   = 'vprofile'
-        
+        // DOCKER_NAME  = 'harishnshetty/vprofile'
+        registryCredential = 'ecr:ap-south-1:awscreds'
+        IMAGE_NAME   = '970378220457.dkr.ecr.ap-south-1.amazonaws.com/vprofileappimg'               
+        VprofileRegistry = "https://970378220457.dkr.ecr.ap-south-1.amazonaws.com"
     }
     
     stages {
@@ -147,11 +150,11 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    env.IMAGE_TAG = "$DOCKER_NAME:${BUILD_NUMBER}"
+                    env.IMAGE_TAG = "$IMAGE_NAME:${BUILD_NUMBER}"
                     sh "docker rmi -f $IMAGE_NAME ${env.IMAGE_TAG} || true"
                     sh "docker build -t $IMAGE_NAME ."
                     sh "docker tag $IMAGE_NAME ${env.IMAGE_TAG}"
-                    sh "docker tag $IMAGE_NAME $DOCKER_NAME:latest"
+                    sh "docker tag $IMAGE_NAME:latest"
                     
                 }
             }
@@ -185,9 +188,9 @@ pipeline {
         stage('Upload App Image to ECR') {
             steps {
                 script {
-                    docker.withRegistry('', 'registryCredential') {
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("$BUILD_NUMBER")
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("latest")
+                    docker.withRegistry( vprofileRegistry, registryCredential ) {
+                        dockerImage.push("$env.IMAGE_TAG")
+                        dockerImage.push("$IMAGE_NAME:latest")
                     }
                 }
             }
