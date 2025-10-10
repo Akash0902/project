@@ -1,15 +1,19 @@
-#  Maven  CICD DevSecOps — Setup Guide
+#  Maven  CICD DevSecOps OWASP ZAPROXY — Setup Guide
 
 
 ## For more projects, check out  
 [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/5d2e06ffa3dd7687607b0c7d4892a6b161c077f9/10%20microservice%20online%20shop%20project.jpg)](https://youtu.be/KNH_qe1vJAg)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr1.jpg)](https://youtu.be/KNH_qe1vJAg)
 
+## OWASP ZAPROXY
 
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr2.png)](https://youtu.be/KNH_qe1vJAg)
 
-- Instance Type :- c5.xlarge
-This guide assumes an Ubuntu/Debian-like environment and sudo privileges.
+## Jenkins Setup
+- Instance Type :- c5.xlarge  [4 Cpu 8Gb Ram ] 
+- 30 GB EBS
+- This guide assumes an Ubuntu/Debian-like environment and sudo privileges.
 
 ---
 
@@ -23,12 +27,16 @@ This guide assumes an Ubuntu/Debian-like environment and sudo privileges.
 | SSH             | 22    | 
 | Jenkins         |       |
 | SonarQube       |       |
+| Prometheus      |       |
+| grafana         |       |
+| node_exporter   |       |
 
-
--Jenkins Security Group
+- Nexus Artifact Security Group
 | Service         | Port  |
 |-----------------|-------|
+| SSH             | 22    | 
 | Nexus           | 8081  |
+| node_exporter   |       |
 
 ## System Update & Common Packages
 
@@ -210,7 +218,7 @@ Access: http://ip-address:9090
 
 ---
 
-## Node Exporter
+## Node Exporter [ Setup on the Both instance ]
 
 Docs: https://prometheus.io/docs/guides/node-exporter/
 
@@ -253,7 +261,9 @@ Add to `/etc/prometheus/prometheus.yml`:
 ```yaml
   - job_name: "node_exporter"
     static_configs:
-      - targets: ["<ip-address>:9100"]
+      - targets:
+          - "<host-ip>:9100"
+          - "<host-ip>:9100"
 
   - job_name: "jenkins"
     metrics_path: /prometheus
@@ -305,6 +315,8 @@ Docs: https://grafana.com/grafana/dashboards/1860-node-exporter-full/
 Docs: https://help.sonatype.com/en/sonatype-nexus-repository.html
 Docs: https://help.sonatype.com/en/download.html
 
+- Instance Type :- t3.medium [2 Cpu 4Gb Ram ] 
+- This guide assumes an Ubuntu/Debian-like environment and sudo privileges.
 
 ## Replace the link if you need the latest nexus
 
@@ -403,6 +415,8 @@ echo "Default admin password is usually in: /opt/nexus/sonatype-work/nexus3/admi
 ---
 ## SonarQube Docker Container Run for Analysis
 
+sonarqube:25.10.0.114319-community
+
 ```bash
 docker run -d --name sonarqube \
   -p 9000:9000 \
@@ -492,3 +506,12 @@ Webhook example:
 ## OWASP Link
 
 Docs: https://www.zaproxy.org/download/
+
+# Clean-up
+
+- 2 EC2 instance
+- ECR
+- delete the IAM jenkins User
+
+## Explore New Videos
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr3.png)](https://www.youtube.com/@devopsHarishNShetty)
