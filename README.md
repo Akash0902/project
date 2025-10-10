@@ -19,7 +19,8 @@
 
 ## Ports to Enable in Security Group
 
--Jenkins Security Group
+- Jenkins Security Group
+
 | Service         | Port  |
 |-----------------|-------|
 | HTTP            | 80    |
@@ -32,6 +33,7 @@
 | node_exporter   |       |
 
 - Nexus Artifact Security Group
+
 | Service         | Port  |
 |-----------------|-------|
 | SSH             | 22    | 
