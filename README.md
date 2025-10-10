@@ -4,11 +4,11 @@
 ## For more projects, check out  
 [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr1.jpg)](https://youtu.be/KNH_qe1vJAg)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr1.jpg)](https://youtu.be/KNH_qe1vJAg)
 
 ## OWASP ZAPROXY
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr2.png)](https://youtu.be/KNH_qe1vJAg)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr2.jpg)](https://youtu.be/KNH_qe1vJAg)
 
 ## Jenkins Setup
 - Instance Type :- c5.xlarge  [4 Cpu 8Gb Ram ] 
@@ -566,5 +566,5 @@ Docs: https://www.zaproxy.org/download/
 ## For more projects, check out  
 [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
 ## Explore New Videos By Click the Image
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr3.png)](https://www.youtube.com/@devopsHarishNShetty)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr3.jpg)](https://www.youtube.com/@devopsHarishNShetty)
 
