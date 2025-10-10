@@ -137,7 +137,7 @@ pipeline {
             }
         }
 
-        stage("OWASP FS Scan") {
+        stage("OWASP Dependency Check Scan") {
             steps {
                 dependencyCheck additionalArguments: '''
                     --scan . 
