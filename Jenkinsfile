@@ -245,7 +245,7 @@ pipeline {
         }
     }
 
-    
+}
     
     post {
         always {
@@ -284,4 +284,3 @@ pipeline {
             }
         }
     }
-}
