@@ -151,19 +151,19 @@ pipeline {
             }
         }
 
-        stage("Tag & Push to DockerHub") {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
-                        sh "docker login -u harishnshetty -p ${dockerpwd}"
-                        sh "docker tag vprofile ${env.IMAGE_TAG}"
-                        sh "docker push ${env.IMAGE_TAG}"
-                        sh "docker tag vprofile harishnshetty/vprofile:latest"
-                        sh "docker push harishnshetty/vprofile:latest"
-                    }
-                }
-            }
-        }
+        // stage("Tag & Push to DockerHub") {
+        //     steps {
+        //         script {
+        //             withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
+        //                 sh "docker login -u harishnshetty -p ${dockerpwd}"
+        //                 sh "docker tag vprofile ${env.IMAGE_TAG}"
+        //                 sh "docker push ${env.IMAGE_TAG}"
+        //                 sh "docker tag vprofile harishnshetty/vprofile:latest"
+        //                 sh "docker push harishnshetty/vprofile:latest"
+        //             }
+        //         }
+        //     }
+        // }
 
         stage("Trivy Scan Image") {
             steps {
@@ -173,6 +173,16 @@ pipeline {
                     trivy image -f json -o trivy-image.json ${env.IMAGE_TAG}
                     trivy image -f table -o trivy-image.txt ${env.IMAGE_TAG}
                     """
+                }
+            }
+        }
+        stage('Upload App Image to ECR') {
+            steps {
+                script {
+                    docker.withRegistry('', 'registryCredential') {
+                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("$BUILD_NUMBER")
+                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("latest")
+                    }
                 }
             }
         }
@@ -186,16 +196,7 @@ pipeline {
             }
         }
 
-        stage('Upload APP image') {
-            steps {
-                script {
-                    docker.withRegistry('', 'registryCredential') {
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("$BUILD_NUMBER")
-                        docker.image("harishnshetty/vprofile:${BUILD_NUMBER}").push("latest")
-                    }
-                }
-            }
-        }
+
     }
     
     post {
