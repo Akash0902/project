@@ -151,28 +151,15 @@ pipeline {
             steps {
                 script {
                     env.IMAGE_TAG = "$IMAGE_NAME:${BUILD_NUMBER}"
-                    sh "docker rmi -f $IMAGE_NAME ${env.IMAGE_TAG} || true"
-                    sh "docker build -t $IMAGE_NAME ."
-                    sh "docker tag $IMAGE_NAME ${env.IMAGE_TAG}"
-                    sh "docker tag $IMAGE_NAME:latest"
-                    
+                    // Clean up existing images
+                    sh "docker rmi -f $IMAGE_NAME:latest ${env.IMAGE_TAG} || true"
+                    // Build the image
+                    sh "docker build -t $IMAGE_NAME:latest ."
+                    // Tag with build number
+                    sh "docker tag $IMAGE_NAME:latest ${env.IMAGE_TAG}"
                 }
             }
         }
-
-        // stage("Tag & Push to DockerHub") {
-        //     steps {
-        //         script {
-        //             withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
-        //                 sh "docker login -u harishnshetty -p ${dockerpwd}"
-        //                 sh "docker tag vprofile ${env.IMAGE_TAG}"
-        //                 sh "docker push ${env.IMAGE_TAG}"
-        //                 sh "docker tag vprofile harishnshetty/vprofile:latest"
-        //                 sh "docker push harishnshetty/vprofile:latest"
-        //             }
-        //         }
-        //     }
-        // }
 
         stage("Trivy Scan Image") {
             steps {
@@ -185,6 +172,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Upload App Image to ECR') {
             steps {
                 script {
@@ -204,8 +192,6 @@ pipeline {
                 }
             }
         }
-
-
     }
     
     post {
