@@ -246,7 +246,7 @@ pipeline {
                 subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
                     <p>Youtube Link :- https://www.youtube.com/@devopsHarishNShetty </p>                                     
-                    <p>Maven Apptier DevSecops CICD pipeline status.</p>
+                    <p>Maven App-tier DevSecops CICD pipeline status.</p>
                     <p>Project: ${env.JOB_NAME}</p>
                     <p>Build Number: ${env.BUILD_NUMBER}</p>
                     <p>Build Status: ${buildStatus}</p>
