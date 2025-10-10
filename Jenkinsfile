@@ -195,6 +195,34 @@ pipeline {
             }
         }
     }
+
+    stage("DAST Scan with OWASP ZAP") {
+        steps {
+            script {
+                echo '🔍 Running OWASP ZAP baseline scan...'
+                sh '''
+                # Run the app first (already in your Deploy stage)
+                # Run ZAP with host network
+                docker run --rm --network host -v $(pwd):/zap/wrk:rw \
+                    -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                    -t http://localhost \
+                    --exit-code 1 \
+                    -r zap_report.html -J zap_report.json
+                '''
+            }
+        }
+        post {
+            always {
+                echo '📦 Archiving ZAP scan reports...'
+                archiveArtifacts artifacts: 'zap_report.html,zap_report.json'
+            }
+            failure {
+                echo '❌ ZAP scan found high severity issues'
+            }
+        }
+    }
+
+
     
     post {
         always {
@@ -217,7 +245,8 @@ pipeline {
             emailext (
                 subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-                    <p>This is a Jenkins Amazon CICD pipeline status.</p>
+                    <p>Youtube Link :- https://www.youtube.com/@devopsHarishNShetty </p>                                     
+                    <p>Maven Apptier DevSecops CICD pipeline status.</p>
                     <p>Project: ${env.JOB_NAME}</p>
                     <p>Build Number: ${env.BUILD_NUMBER}</p>
                     <p>Build Status: ${buildStatus}</p>
@@ -227,7 +256,7 @@ pipeline {
                 to: 'harishn662@gmail.com',
                 from: 'harishn662@gmail.com',
                 mimeType: 'text/html',
-                attachmentsPattern: 'trivyfs.txt,trivy-image.json,trivy-image.txt,dependency-check-report.xml'
+                attachmentsPattern: 'trivyfs.txt,trivy-image.json,trivy-image.txt,dependency-check-report.xml,zap_report.html,zap_report.json'
                     )
             }
         }
