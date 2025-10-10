@@ -194,7 +194,7 @@ pipeline {
                 }
             }
         }
-    }
+
 
     stage("DAST Scan with OWASP ZAP") {
         steps {
