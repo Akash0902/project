@@ -18,6 +18,9 @@ pipeline {
         NEXUS_REPO_ID = "vprofile-repo"
         NEXUS_CREDENTIAL_ID = "nexuslogin"
         ARTVERSION = "${env.BUILD_ID}"
+
+        DOCKER_NAME  = 'harishnshetty/vprofile'
+        IMAGE_NAME   = 'vprofile'
         
     }
     
@@ -144,9 +147,12 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    env.IMAGE_TAG = "harishnshetty/vprofile:${BUILD_NUMBER}"
-                    sh "docker rmi -f vprofile ${env.IMAGE_TAG} || true"
-                    sh "docker build -t vprofile ."
+                    env.IMAGE_TAG = "$DOCKER_NAME:${BUILD_NUMBER}"
+                    sh "docker rmi -f $IMAGE_NAME ${env.IMAGE_TAG} || true"
+                    sh "docker build -t $IMAGE_NAME ."
+                    sh "docker tag $IMAGE_NAME ${env.IMAGE_TAG}"
+                    sh "docker tag $IMAGE_NAME $DOCKER_NAME:latest"
+                    
                 }
             }
         }
