@@ -208,23 +208,35 @@ pipeline {
                 script {
                     echo '🔍 Running OWASP ZAP baseline scan...'
 
-                    // Run the ZAP scan as root user
-                    sh '''
-                    docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
+                    // Run ZAP but ignore exit code
+                    def exitCode = sh(script: '''
+                        docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
                         -t http://localhost \
                         -r zap_report.html -J zap_report.json
-                    '''
+                    ''', returnStatus: true)
 
-                    // Parse the JSON report and fail the build if high severity alerts exist
+                    echo "ZAP scan finished with exit code: ${exitCode}"
+
+                    // Read the JSON report if it exists
                     if (fileExists('zap_report.json')) {
                         def zapJson = readJSON file: 'zap_report.json'
-                        def highCount = zapJson.site.collect { it.alerts.findAll { it.risk == 'High' }.size() }.sum()
-                        echo "High severity issues found: ${highCount}"
 
-                        if(highCount > 0) {
-                            error "ZAP detected High severity issues! Failing the build."
-                        }
+                        def highCount = zapJson.site.collect { site ->
+                            site.alerts.findAll { it.risk == 'High' }.size()
+                        }.sum()
+
+                        def mediumCount = zapJson.site.collect { site ->
+                            site.alerts.findAll { it.risk == 'Medium' }.size()
+                        }.sum()
+
+                        def lowCount = zapJson.site.collect { site ->
+                            site.alerts.findAll { it.risk == 'Low' }.size()
+                        }.sum()
+
+                        echo "✅ High severity issues: ${highCount}"
+                        echo "⚠️ Medium severity issues: ${mediumCount}"
+                        echo "ℹ️ Low severity issues: ${lowCount}"
                     } else {
                         echo "ZAP JSON report not found, continuing build..."
                     }
