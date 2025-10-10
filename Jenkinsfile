@@ -211,7 +211,7 @@ pipeline {
                     // Run ZAP but ignore exit code
                     def exitCode = sh(script: '''
                         docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
-                        -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                        -t zaproxy/zap-stable zap-baseline.py \
                         -t http://localhost \
                         -r zap_report.html -J zap_report.json
                     ''', returnStatus: true)

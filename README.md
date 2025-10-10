@@ -399,6 +399,7 @@ echo "Default admin password is usually in: /opt/nexus/sonatype-work/nexus3/admi
 - Docker Pipeline
 - CloudBees Docker Build and Publish
 - OWASP ZAP
+
 ---
 ## SonarQube Docker Container Run for Analysis
 
@@ -483,6 +484,11 @@ Webhook example:
 - port
 - artifact-repo-id [ vprofile-release ]
 - go to the nexus [ Settings --> Repositories --> create Repositories --> maven2 (hosted) --> vprofile-repo  --> create Repositories ]
+---
 ## Create a repository in the ECR
 
-- web
+- vprofileappimg
+
+## OWASP Link
+
+Docs: https://www.zaproxy.org/download/
