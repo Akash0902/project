@@ -396,7 +396,8 @@ echo "Default admin password is usually in: /opt/nexus/sonatype-work/nexus3/admi
 - Amazon Web Services SDK :: All
 - Amazon ECR
 - Pipeline: AWS Steps
-
+- Docker Pipeline
+- CloudBees Docker Build and Publish
 
 ---
 ## SonarQube Docker Container Run for Analysis

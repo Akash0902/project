@@ -24,7 +24,7 @@ pipeline {
         // DOCKER_NAME  = 'harishnshetty/vprofile'
         registryCredential = 'ecr:ap-south-1:awscreds'
         IMAGE_NAME   = '970378220457.dkr.ecr.ap-south-1.amazonaws.com/vprofileappimg'               
-        VprofileRegistry = "https://970378220457.dkr.ecr.ap-south-1.amazonaws.com"
+        vprofileRegistry = "https://970378220457.dkr.ecr.ap-south-1.amazonaws.com"
     }
     
     stages {
@@ -150,13 +150,14 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    env.IMAGE_TAG = "$IMAGE_NAME:${BUILD_NUMBER}"
-                    // Clean up existing images
-                    sh "docker rmi -f $IMAGE_NAME:latest ${env.IMAGE_TAG} || true"
-                    // Build the image
-                    sh "docker build -t $IMAGE_NAME:latest ."
+                    env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker rmi -f ${IMAGE_NAME}:latest ${env.IMAGE_TAG} || true"
+                    
+                    // Build and capture the docker image object
+                    dockerImage = docker.build("${IMAGE_NAME}:latest", ".")
+                    
                     // Tag with build number
-                    sh "docker tag $IMAGE_NAME:latest ${env.IMAGE_TAG}"
+                    sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"
                 }
             }
         }
@@ -173,12 +174,13 @@ pipeline {
             }
         }
         
-        stage('Upload App Image to ECR') {
+
+        stage("Upload App Image to ECR") {
             steps {
                 script {
                     docker.withRegistry( vprofileRegistry, registryCredential ) {
-                        dockerImage.push("$env.IMAGE_TAG")
-                        dockerImage.push("$IMAGE_NAME:latest")
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push("latest")
                     }
                 }
             }
