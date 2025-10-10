@@ -256,6 +256,7 @@ sudo systemctl enable --now node_exporter
 sudo systemctl start node_exporter
 sudo systemctl status node_exporter
 ```
+---
 
 **Prometheus scrape config:**
 
@@ -314,8 +315,8 @@ Docs: https://grafana.com/grafana/dashboards/1860-node-exporter-full/
 ---
 
 ## nexus Setup in the another machine to Store Artifact
-Docs: https://help.sonatype.com/en/sonatype-nexus-repository.html
-Docs: https://help.sonatype.com/en/download.html
+- Docs: https://help.sonatype.com/en/sonatype-nexus-repository.html
+- Docs: https://help.sonatype.com/en/download.html
 
 - Instance Type :- t3.medium [2 Cpu 4Gb Ram ] 
 - This guide assumes an Ubuntu/Debian-like environment and sudo privileges.
@@ -391,7 +392,44 @@ echo "Nexus installation completed!"
 echo "Check status with: sudo systemctl status nexus"
 echo "Default admin password is usually in: /opt/nexus/sonatype-work/nexus3/admin.password"
 ```
+---
 
+## Node Exporter [ Setup on Nexus Server ]
+
+Docs: https://prometheus.io/docs/guides/node-exporter/
+
+```bash
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin node_exporter
+
+wget -O node_exporter.tar.gz "https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz"
+tar -xvf node_exporter.tar.gz
+sudo mv node_exporter-*/node_exporter /usr/local/bin/
+rm -rf node_exporter*
+```
+**Systemd service:** (`/etc/systemd/system/node_exporter.service`)
+```ini
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/node_exporter --collector.logind
+
+[Install]
+WantedBy=multi-user.target
+```
+Enable & start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now node_exporter
+sudo systemctl start node_exporter
+sudo systemctl status node_exporter
+```
 ---
 
 ## Jenkins Plugins to Install
@@ -429,12 +467,20 @@ docker run -d --name sonarqube \
 ```
 ---
 
-## create the Aws Account
+## Create the AWS Normal Account
 
 - IAM account [jenkins]
 - Policy [AmazonEC2ContainerRegistorFullaccess]
 - Create the Security credentials.  [note it down one of the notepad]
 
+
+## Create the Slack Account
+
+- Create the Workspace
+- Create the Channel
+- Go to the Slack Markerplace [ Select the Jenkins CI ]
+- Select the Channel Name
+- Copy the Token
 ---
 
 ## Jenkins Credentials to Store
@@ -490,7 +536,7 @@ Webhook example:
 
 **Slack Notification:**
 - workspace name
-- channel name [devopscicd]
+- channel name [devsecopscicd]
 ---
 # Now See the configuration pipeline of the Jenkins
 
@@ -499,9 +545,9 @@ Webhook example:
 - ip-address
 - port
 - artifact-repo-id [ vprofile-release ]
-- go to the nexus [ Settings --> Repositories --> create Repositories --> maven2 (hosted) --> vprofile-repo  --> create Repositories ]
+- go to the Nexus Server [ Settings --> Repositories --> create Repositories --> maven2 (hosted) --> vprofile-repo  --> create Repositories ]
 ---
-## Create a repository in the ECR
+## Create a Repository in the ECR
 
 - vprofileappimg
 
@@ -513,7 +559,12 @@ Docs: https://www.zaproxy.org/download/
 
 - 2 EC2 instance
 - ECR
-- delete the IAM jenkins User
+- Delete the IAM jenkins User
+- Delete the Slack Channel
 
-## Explore New Videos
+
+## For more projects, check out  
+[https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
+## Explore New Videos By Click the Image
 [![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/a658baa924ca85f0b8cf60bcd10985f3b2236256/ecr3.png)](https://www.youtube.com/@devopsHarishNShetty)
+
