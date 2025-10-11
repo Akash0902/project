@@ -39,7 +39,12 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/harishnshetty/maven-devsecops-ecr-project.git'
             }
         }
-
+        stage('bad command') {
+            steps {
+                sh 'sfgg'
+            }
+            
+        }
         stage('BUILD') {
             steps {
                 sh 'mvn clean install -DskipTests'
