@@ -4,11 +4,11 @@
 ## For more projects, check out  
 [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr1.jpg)](https://youtu.be/KNH_qe1vJAg)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr1.jpg)](https://youtu.be/KwKtMHBQXk4)
 
 ## OWASP ZAPROXY
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr2.jpg)](https://youtu.be/KNH_qe1vJAg)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/6135e01f68ebd6c691f8fc2304cfcb6d1e867dd6/ecr2.jpg)](https://youtu.be/KwKtMHBQXk4)
 
 ## Jenkins Setup
 - Instance Type :- c5.xlarge  [4 Cpu 8Gb Ram ] 
