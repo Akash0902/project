@@ -263,7 +263,7 @@ pipeline {
 
                 // 🟢 Slack Notification
                 slackSend(
-                    channel: '#devopscicd',
+                    channel: '#devsecopscicd',
                     color: COLOR_MAP[buildStatus],
                     message: """*${buildStatus}:* Job *${env.JOB_NAME}* Build #${env.BUILD_NUMBER}
                     👤 *Started by:* ${buildUser}
