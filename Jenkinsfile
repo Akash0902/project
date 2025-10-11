@@ -15,7 +15,7 @@ pipeline {
 
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "192.168.64.6:8081"
+        NEXUS_URL = "172.31.4.223:8081"
         NEXUS_REPOSITORY = "vprofile-repo"
         NEXUS_REPO_ID = "vprofile-repo"
         NEXUS_CREDENTIAL_ID = "nexuslogin"
