@@ -1,8 +1,9 @@
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
+FROM tomcat:10-jdk21
 
-# Pipeline downloads the artifact as app.jar
-COPY app.jar /app/app.jar
+RUN rm -rf /usr/local/tomcat/webapps/*
+COPY target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8082
-ENTRYPOINT ["java","-jar","/app/app.jar","--server.port=8082"]
+CMD ["catalina.sh", "run"]
+WORKDIR /usr/local/tomcat/
+VOLUME /usr/local/tomcat/webapps
