@@ -1,11 +1,8 @@
-FROM tomcat:10-jdk21
-LABEL "Project"="Vprofile"
-LABEL "Author"="HarishNShetty"
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
 
-RUN rm -rf /usr/local/tomcat/webapps/*
-COPY target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war
+# Pipeline downloads the artifact as app.jar
+COPY app.jar /app/app.jar
 
-EXPOSE 8080
-CMD ["catalina.sh", "run"]
-WORKDIR /usr/local/tomcat/
-VOLUME /usr/local/tomcat/webapps
+EXPOSE 8082
+ENTRYPOINT ["java","-jar","/app/app.jar","--server.port=8082"]
