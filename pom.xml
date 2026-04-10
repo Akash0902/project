@@ -7,30 +7,84 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.visualpathit</groupId>
-    <artifactId>vprofile</artifactId>
-    <version>v2</version>
+    <artifactId>database_service_project</artifactId>
+    <version>1.0.0</version>
     <packaging>war</packaging>
 
-    <name>Visualpathit VProfile Webapp</name>
+    <name>Database Service Project</name>
 
+    <!-- ========================= -->
+    <!-- Java & Dependency Versions -->
+    <!-- ========================= -->
     <properties>
+        <java.version>17</java.version>
+
         <spring.version>6.0.11</spring.version>
         <spring-security.version>6.1.2</spring-security.version>
         <spring-data-jpa.version>3.1.2</spring-data-jpa.version>
 
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <!-- ✅ STABLE Hibernate (NOT alpha) -->
+        <hibernate.version>6.2.7.Final</hibernate.version>
+
+        <mysql.version>8.0.33</mysql.version>
+        <log4j.version>2.20.0</log4j.version>
+
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
     </properties>
 
+    <!-- ================= -->
+    <!-- Dependencies -->
+    <!-- ================= -->
     <dependencies>
-        <!-- Spring MVC -->
+
+        <!-- Spring Core -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${spring.version}</version>
         </dependency>
 
-        <!-- Servlet API (provided by Tomcat) -->
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${spring-data-jpa.version}</version>
+        </dependency>
+
+        <!-- Hibernate -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
+        </dependency>
+
+        <!-- MySQL -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql.version}</version>
+        </dependency>
+
+        <!-- Servlet API (Provided by Tomcat) -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
@@ -38,46 +92,61 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JPA -->
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
-            <version>${spring-data-jpa.version}</version>
-        </dependency>
-
-        <!-- MySQL -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.33</version>
-        </dependency>
-
         <!-- Logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.20.0</version>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
 
-        <!-- Test -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <!-- ================= -->
+        <!-- Test Dependencies -->
+        <!-- ================= -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
+    <!-- ================= -->
+    <!-- Build Configuration -->
+    <!-- ================= -->
     <build>
-        <!-- ✅ WAR will always be ROOT.war -->
+
+        <!-- ✅ Always generate ROOT.war -->
         <finalName>ROOT</finalName>
 
         <plugins>
+
+            <!-- ✅ FIXES YOUR COMPILATION ERROR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+
+            <!-- WAR Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
             </plugin>
+
         </plugins>
     </build>
+
 </project>
