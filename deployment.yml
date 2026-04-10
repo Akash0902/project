@@ -22,7 +22,7 @@ spec:
           image: 13.201.63.237:8000/project:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8082
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -35,5 +35,5 @@ spec:
     app: project
   ports:
     - port: 80
-      targetPort: 8082
+      targetPort: 8080
       nodePort: 8083

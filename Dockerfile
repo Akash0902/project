@@ -1,14 +1,14 @@
-FROM tomcat:10-jdk21
+FROM tomcat:10.1-jdk17-temurin
 
 WORKDIR /usr/local/tomcat
 
-# Remove default apps
+# Remove default Tomcat apps
 RUN rm -rf webapps/*
 
-# Copy ANY WAR produced by Maven
-COPY target/*.war webapps/ROOT.war
+# Copy WAR produced by Maven
+COPY target/ROOT.war webapps/ROOT.war
 
-EXPOSE 8082
+# Tomcat internal port
+EXPOSE 8080
 
-CMD ["catalina.sh", "run"]FROM tomcat:10-jdk21
-
+CMD ["catalina.sh", "run"]
