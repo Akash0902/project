@@ -25,7 +25,7 @@ spec:
         - name: nexus-creds
       containers:
         - name: project
-          image: 13.201.63.237:8000/project:latest
+          image: 13.201.26.83:8000/project:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
