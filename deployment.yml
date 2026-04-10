@@ -36,4 +36,4 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
-      nodePort: 8083
+      nodePort: 30083
