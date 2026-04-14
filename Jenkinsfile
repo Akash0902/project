@@ -1,294 +1,151 @@
-def COLOR_MAP = [
-    'SUCCESS': 'good',
-    'FAILURE': 'danger',
-]
-
 pipeline {
     agent any
+
     tools {
-        maven 'MAVEN3'
-        jdk 'JDK17'
+        jdk 'jdk17'
+        maven 'maven'
     }
+
     environment {
+        // Git
+        REPO_URL = 'https://github.com/Akash0902/project.git'
+        BRANCH   = 'main'
 
-        SCANNER_HOME = tool 'sonar-scanner'
+        // Sonar
+        SONARQUBE_ENV     = 'sonar'
+        SONAR_PROJECT_KEY = 'project'
 
-        NEXUS_VERSION = 'nexus3'
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "172.31.4.223:8081"
-        NEXUS_REPOSITORY = "vprofile-repo"
-        NEXUS_REPO_ID = "vprofile-repo"
-        NEXUS_CREDENTIAL_ID = "nexuslogin"
-        ARTVERSION = "${env.BUILD_ID}"
+        // Nexus
+        NEXUS_CRED_ID  = 'nexus'
+        NEXUS_REGISTRY = '15.206.166.35:8000'
+        IMAGE_NAME     = 'project'
 
-        // DOCKER_NAME  = 'harishnshetty/vprofile'
-        registryCredential = 'ecr:ap-south-1:awscreds'
-        IMAGE_NAME   = '970378220457.dkr.ecr.ap-south-1.amazonaws.com/vprofileappimg'               
-        vprofileRegistry = "https://970378220457.dkr.ecr.ap-south-1.amazonaws.com"
+        // Kubernetes
+        KUBECONFIG = '/var/lib/jenkins/kubeconfig'
+
+        // Argo CD
+        ARGOCD_SERVER   = '15.206.166.35:8082'
+        ARGOCD_APP_NAME = 'project'
+
+        // Automated version
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
-    
+
     stages {
-        stage("Clean Workspace") {
+
+        stage('Checkout') {
             steps {
-                cleanWs()
+                git branch: "${BRANCH}", url: "${REPO_URL}"
             }
         }
 
-        stage("Git Checkout") {
+        stage('Pre-Checks') {
             steps {
-                git branch: 'main', url: 'https://github.com/harishnshetty/maven-devsecops-ecr-project.git'
+                sh '''
+                echo "===== Docker check ====="
+                docker ps
+
+                echo "===== Kubernetes check ====="
+                kubectl get nodes
+                '''
             }
         }
 
-        stage('BUILD') {
+        stage('Build & Test') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                sh 'mvn clean test'
             }
-            post {
-                success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
+        }
+
+        stage('Publish JaCoCo Report') {
+            steps {
+                jacoco(
+                    execPattern: 'target/*.exec',
+                    classPattern: 'target/classes',
+                    sourcePattern: 'src/main/java',
+                    exclusionPattern: 'src/test*'
+                )
+            }
+        }
+
+        stage('Package WAR') {
+            steps {
+                sh 'mvn -DskipTests package'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY}"
                 }
             }
         }
 
-        stage('UNIT TEST') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn test'
+                sh """
+                docker build \
+                  -t ${NEXUS_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} \
+                  -t ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest .
+                """
             }
         }
 
-        stage('INTEGRATION TEST') {
+        stage('Push Image to Nexus') {
             steps {
-                sh 'mvn verify -DskipUnitTests'
-            }
-        }
-        
-        stage('CODE ANALYSIS WITH CHECKSTYLE') {
-            steps {
-                sh 'mvn checkstyle:checkstyle'
-            }
-            post {
-                success {
-                    echo 'Generated Analysis Result'
-                }
-            }
-        }
-
-        stage('CODE ANALYSIS with SONARQUBE') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh '''${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                        -Dsonar.projectName=vprofile-repo \
-                        -Dsonar.projectVersion=1.0 \
-                        -Dsonar.sources=src/ \
-                        -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                        -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-                }
-                
-            }
-        }
-        stage("Quality Gate") {
-            steps {
-                script {
-                    timeout(time: 3, unit: 'MINUTES') {
-                  
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
-                }
-            }
-        }
-        }
-
-        stage("Publish to Nexus Repository Manager") {
-            steps {
-                script {
-                    pom = readMavenPom file: "pom.xml"
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path
-                    artifactExists = fileExists artifactPath
-                    if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version} ARTVERSION"
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: ARTVERSION,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        )
-                    } else {
-                        error "*** File: ${artifactPath}, could not be found"
-                    }
-                }
-            }
-        }
-
-        stage("OWASP Dependency Check Scan") {
-            steps {
-                dependencyCheck additionalArguments: '''
-                    --scan . 
-                    --disableYarnAudit 
-                    --disableNodeAudit 
-                ''',
-                odcInstallation: 'dp-check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-
-        stage("Trivy File Scan") {
-            steps {
-                sh "trivy fs . > trivyfs.txt"
-            }
-        }
-
-        stage("Build Docker Image") {
-            steps {
-                script {
-                    env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker rmi -f ${IMAGE_NAME}:latest ${env.IMAGE_TAG} || true"
-                    
-                    // Build and capture the docker image object
-                    dockerImage = docker.build("${IMAGE_NAME}:latest", ".")
-                    
-                    // Tag with build number
-                    sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"
-                }
-            }
-        }
-
-        stage("Trivy Scan Image") {
-            steps {
-                script {
+                withCredentials([usernamePassword(
+                    credentialsId: "${NEXUS_CRED_ID}",
+                    usernameVariable: 'NEXUS_USER',
+                    passwordVariable: 'NEXUS_PASS'
+                )]) {
                     sh """
-                    echo '🔍 Running Trivy scan on ${env.IMAGE_TAG}'
-                    trivy image -f json -o trivy-image.json ${env.IMAGE_TAG}
-                    trivy image -f table -o trivy-image.txt ${env.IMAGE_TAG}
+                    echo "${NEXUS_PASS}" | docker login ${NEXUS_REGISTRY} \
+                      -u "${NEXUS_USER}" --password-stdin
+
+                    docker push ${NEXUS_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
                     """
                 }
             }
         }
-        
 
-        stage("Upload App Image to ECR") {
+        stage('Trigger Argo CD Sync') {
             steps {
-                script {
-                    docker.withRegistry( vprofileRegistry, registryCredential ) {
-                        dockerImage.push("${BUILD_NUMBER}")
-                        dockerImage.push("latest")
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'argocd',
+                    usernameVariable: 'ARGOCD_USER',
+                    passwordVariable: 'ARGOCD_PASS'
+                )]) {
+                    sh '''
+                    set -e
+
+                    /usr/local/bin/argocd login ${ARGOCD_SERVER} \
+                      --username "$ARGOCD_USER" \
+                      --password "$ARGOCD_PASS" \
+                      --grpc-web \
+                      --insecure
+
+                    /usr/local/bin/argocd app sync ${ARGOCD_APP_NAME}
+                    /usr/local/bin/argocd app wait ${ARGOCD_APP_NAME} --health --timeout 300
+                    '''
                 }
             }
         }
 
-        stage("Deploy to Container") {
+        stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh "docker rm -f vprofile || true"
-                    sh "docker run -d --name vprofile -p 80:8080 ${env.IMAGE_TAG}"
-                }
+                sh '''
+                kubectl rollout restart deployment/project-deployment -n project
+                kubectl rollout status deployment/project-deployment -n project --timeout=300s
+                '''
             }
         }
-
-        stage("DAST Scan with OWASP ZAP") {
-            steps {
-                script {
-                    echo '🔍 Running OWASP ZAP baseline scan...'
-
-                    // Run ZAP but ignore exit code
-                    def exitCode = sh(script: '''
-                        docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
-                        -t zaproxy/zap-stable zap-baseline.py \
-                        -t http://localhost \
-                        -r zap_report.html -J zap_report.json
-                    ''', returnStatus: true)
-
-                    echo "ZAP scan finished with exit code: ${exitCode}"
-
-                    // Read the JSON report if it exists
-                    if (fileExists('zap_report.json')) {
-                        def zapJson = readJSON file: 'zap_report.json'
-
-                        def highCount = zapJson.site.collect { site ->
-                            site.alerts.findAll { it.risk == 'High' }.size()
-                        }.sum()
-
-                        def mediumCount = zapJson.site.collect { site ->
-                            site.alerts.findAll { it.risk == 'Medium' }.size()
-                        }.sum()
-
-                        def lowCount = zapJson.site.collect { site ->
-                            site.alerts.findAll { it.risk == 'Low' }.size()
-                        }.sum()
-
-                        echo "✅ High severity issues: ${highCount}"
-                        echo "⚠️ Medium severity issues: ${mediumCount}"
-                        echo "ℹ️ Low severity issues: ${lowCount}"
-                    } else {
-                        echo "ZAP JSON report not found, continuing build..."
-                    }
-                }
-            }
-            post {
-                always {
-                    echo '📦 Archiving ZAP scan reports...'
-                    archiveArtifacts artifacts: 'zap_report.html,zap_report.json', allowEmptyArchive: true
-                }
-            }
-        }
-
-
     }
-    
+
     post {
         always {
-            script {
-                // 🔹 Common values
-                def buildStatus = currentBuild.currentResult
-                def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
-                def buildUrl = "${env.BUILD_URL}"
-
-                // 🟢 Slack Notification
-                slackSend(
-                    channel: '#devsecopscicd',
-                    color: COLOR_MAP[buildStatus],
-                    message: """*${buildStatus}:* Job *${env.JOB_NAME}* Build #${env.BUILD_NUMBER}
-                    👤 *Started by:* ${buildUser}
-                    🔗 *Build URL:* <${buildUrl}|Click Here for Details>"""
-                )
-
-                // 📧 Email Notification
-            emailext (
-                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <p>Youtube Link :- https://www.youtube.com/@devopsHarishNShetty </p>                                     
-                    <p>Maven App-tier DevSecops CICD pipeline status.</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build Number: ${env.BUILD_NUMBER}</p>
-                    <p>Build Status: ${buildStatus}</p>
-                    <p>Started by: ${buildUser}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """,
-                to: 'harishn662@gmail.com',
-                from: 'harishn662@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivyfs.txt,trivy-image.json,trivy-image.txt,dependency-check-report.xml,zap_report.html,zap_report.json'
-                    )
-            }
+            sh 'docker image prune -f || true'
         }
     }
-
 }
