@@ -17,14 +17,14 @@ pipeline {
 
         // Nexus
         NEXUS_CRED_ID  = 'nexus'
-        NEXUS_REGISTRY = '15.206.166.35:8000'
+        NEXUS_REGISTRY = '43.205.145.63:8000'
         IMAGE_NAME     = 'project'
 
         // Kubernetes
         KUBECONFIG = '/var/lib/jenkins/kubeconfig'
 
         // Argo CD
-        ARGOCD_SERVER   = '15.206.166.35:8082'
+        ARGOCD_SERVER   = '43.205.145.63:8082'
         ARGOCD_APP_NAME = 'project'
 
         // Automated version
@@ -99,13 +99,13 @@ pipeline {
                     usernameVariable: 'NEXUS_USER',
                     passwordVariable: 'NEXUS_PASS'
                 )]) {
-                    sh """
+                    sh '''
                     echo "${NEXUS_PASS}" | docker login ${NEXUS_REGISTRY} \
                       -u "${NEXUS_USER}" --password-stdin
 
                     docker push ${NEXUS_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
-                    """
+                    '''
                 }
             }
         }
