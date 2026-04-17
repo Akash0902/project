@@ -89,7 +89,7 @@
         <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
             <form class="login100-form validate-form" method="POST" action="${contextPath}/login">
                 <span class="login100-form-title p-b-49">
-                    Login
+                    Welcome to Login Page 
                 </span>
 
                 <!-- Display error message if any -->
